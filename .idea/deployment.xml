@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="GPU65" confirmBeforeUploading="false" autoUploadExternalChanges="true" compareModeInSync="TEXT">
+    <option name="confirmBeforeUploading" value="false" />
+    <serverData>
+      <paths name="GPU65">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/StaDiffuser" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="" local="" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
