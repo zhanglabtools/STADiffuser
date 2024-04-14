@@ -13,8 +13,8 @@ sns.set_theme("paper", style="ticks", font_scale=1.25)
 
 
 if __name__ == "__main__":
-    from stadiff.models import SpaUNet1DModel
-    from stadiff.pipeline import prepare_dataset
+    from stadiffuser.models import SpaUNet1DModel
+    from stadiffuser.pipeline import prepare_dataset
     from diffusers import DDPMScheduler
     from collections import defaultdict
     from torch_geometric.loader import NeighborLoader
