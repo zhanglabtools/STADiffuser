@@ -1,13 +1,20 @@
 # Configuration file for the Sphinx documentation builder.
 
 # -- Project information
+import sys
+import os
 
+
+sys.path.insert(0, os.path.abspath('../..'))
+# print current path
+print(os.path.abspath('../..'))
 project = 'STADiffuser'
 copyright = '2024, Chihao Zhang'
 author = 'Chihao Zhang'
 
 release = '0.1'
 version = '0.1.0'
+
 
 # -- General configuration
 
