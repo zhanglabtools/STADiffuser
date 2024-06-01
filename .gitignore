@@ -15,11 +15,14 @@ command_task.txt
 stadiffuser-comparison-R
 dataset
 scripts
+test
 envir*
 # JupyterNotebooks
-.ipynb_checkpoints
 */.ipynb_checkpoints/*
-
+.idea
+.ipynb_checkpoints
+run_task.bat
+*zip
 # IPython
 profile_default/
 ipython_config.py
