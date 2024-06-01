@@ -21,34 +21,66 @@ class StaDiffuserOutput(BaseOutput):
 
 class SpaUNet1DModel(ModelMixin, ConfigMixin):
     """
-    The denoising network for STADiffuser, which is based on the `UNet1DModel` from `diffusers`.
+    The denoising network for STADiffuser, extending the `UNet1DModel` from `diffusers` with spatial processing.
 
-    Parameters:
-        sample_size (`int`, *optional*): Default length of sample. Should be adaptable at runtime.
-        in_channels (`int`, *optional*, defaults to 2): Number of channels in the input sample.
-        out_channels (`int`, *optional*, defaults to 2): Number of channels in the output.
-        extra_in_channels (`int`, *optional*, defaults to 0):
-            Number of additional channels to be added to the input of the first down block. Useful for cases where the
-            input data has more channels than what the model is initially designed for.
-        time_embedding_type (`str`, *optional*, defaults to `"fourier"`): Type of time embedding to use.
-        freq_shift (`float`, *optional*, defaults to 0.0): Frequency shift for fourier time embedding.
-        flip_sin_to_cos (`bool`, *optional*, defaults to :
-            obj:`False`): Whether to flip sin to cos for fourier time embedding.
-        down_block_types (`Tuple[str]`, *optional*, defaults to :
-            obj:`("DownBlock1D", "DownBlock1DNoSkip", "AttnDownBlock1D")`): Tuple of downsample block types.
-        up_block_types (`Tuple[str]`, *optional*, defaults to :
-            obj:`("UpBlock1D", "UpBlock1DNoSkip", "AttnUpBlock1D")`): Tuple of upsample block types.
-        block_out_channels (`Tuple[int]`, *optional*, defaults to :
-            obj:`(32, 32, 64)`): Tuple of block output channels.
-        mid_block_type (`str`, *optional*, defaults to "UNetMidBlock1D"): block type for middle of UNet.
-        out_block_type (`str`, *optional*, defaults to `None`): optional output processing of UNet.
-        act_fn (`str`, *optional*, defaults to None): optional activation function in UNet blocks.
-        norm_num_groups (`int`, *optional*, defaults to 8): group norm member count in UNet blocks.
-        layers_per_block (`int`, *optional*, defaults to 1): added number of layers in a UNet block.
-        downsample_each_block (`int`, *optional*, defaults to False:
-            experimental feature for using a UNet without upsampling.
+    This model is designed to process one-dimensional data, such as time series or signals, with an emphasis on spatial information. It includes features for spatial encoding and can be configured to use three-dimensional spatial concatenation for enhanced performance.
+
+    Parameters
+    ----------
+    sample_size : int, optional
+        The default length of the input sample. Defaults to 32.
+    spatial_encoding : str, optional
+        The type of spatial encoding to use. Defaults to "sinusoidal".
+    sample_rate : int, optional
+        The sample rate of the input data, if applicable.
+    in_channels : int, optional
+        The number of channels in the input sample. Defaults to 2.
+    out_channels : int, optional
+        The number of channels in the output sample. Defaults to 2.
+    extra_in_channels : int, optional
+        Additional channels to append to the input. Defaults to 0.
+    time_embedding_type : str, optional
+        The type of time embedding to use. Defaults to "fourier".
+    flip_sin_to_cos : bool, optional
+        Whether to convert sine to cosine for Fourier time embedding. Defaults to True.
+    use_timestep_embedding : bool, optional
+        Whether to use timestep embedding. Defaults to False.
+    freq_shift : float, optional
+        Frequency shift for Fourier time embedding. Defaults to 0.0.
+    down_block_types : Tuple[str], optional
+        Tuple of downsample block types.
+    up_block_types : Tuple[str], optional
+        Tuple of upsample block types.
+    mid_block_type : str, optional
+        The block type for the middle of the UNet. Defaults to "UNetMidBlock1D".
+    out_block_type : str, optional
+        The optional output processing block type for the UNet.
+    block_out_channels : Tuple[int], optional
+        Tuple of block output channels.
+    act_fn : str, optional
+        The optional activation function to use in UNet blocks.
+    norm_num_groups : int, optional
+        The number of groups for group normalization. Defaults to 8.
+    layers_per_block : int, optional
+        The number of layers per block in the UNet. Defaults to 1.
+    downsample_each_block : bool, optional
+        Whether to downsample in each block. Defaults to False.
+    spatial3d_concat : bool, optional
+        Whether to use three-dimensional spatial concatenation.
+    class_embed_type : str, optional
+        The type of class embedding to use.
+    num_class_embeds : int, optional
+        The number of class embeddings.
+
+    Attributes
+    ----------
+    time_embedder : object
+        The time embedding module.
+    spatial_embedder : object
+        The spatial embedding module.
+    model : object
+        The core UNet model.
     """
-
     @register_to_config
     def __init__(
             self,
@@ -56,7 +88,7 @@ class SpaUNet1DModel(ModelMixin, ConfigMixin):
             spatial_encoding: str = "sinusoidal",
             sample_rate: Optional[int] = None,
             in_channels: int = 2,
-            out_channels: int = 2,
+            out_channels: int = 1,
             extra_in_channels: int = 0,
             time_embedding_type: str = "fourier",
             flip_sin_to_cos: bool = True,
@@ -198,20 +230,23 @@ class SpaUNet1DModel(ModelMixin, ConfigMixin):
             return_dict: bool = True,
     ) -> Union[StaDiffuserOutput, Tuple]:
         r"""
+        Forward pass of the STADiffuser model.
+
         Args:
-            sample (`torch.FloatTensor`): `(batch_size, num_channels, sample_size)` noisy inputs tensor
-            timestep (`torch.FloatTensor` or `float` or `int): (batch) timesteps
-            spatial_coord (`torch.FloatTensor`, *optional*, defaults to `None`): `(batch_size, 2)` spatial coordinates
-            class_labels (`torch.LongTensor`, *optional*, defaults to `None`): `(batch_size)` class labels
-            return_dict (`bool`, *optional*, defaults to `True`):
-                Whether to return a [`StaDiffuserOutput`] instead of a plain tuple.
+            sample (torch.FloatTensor):
+                Input tensor of shape `(batch_size, num_channels, sample_size)` containing noisy inputs.
+            timestep (Union[torch.Tensor, float, int]):
+                Batched timestep values.
+            spatial_coord (torch.FloatTensor, optional):
+                Spatial coordinates tensor of shape `(batch_size, 2)`. Defaults to None.
+            class_labels (torch.LongTensor, optional):
+                Class labels tensor of shape `(batch_size)`. Defaults to None.
+            return_dict (bool, optional):
+                Whether to return a `StaDiffuserOutput` instead of a plain tuple. Defaults to True.
 
         Returns:
-            `StaDiffuserOutput` if `return_dict` is True,
-            otherwise a `tuple`.
+            StaDiffuserOutput or tuple: If `return_dict` is True, returns a StaDiffuserOutput instance, otherwise returns a tuple.
         """
-
-        # 1. time
         timesteps = timestep
         if not torch.is_tensor(timesteps):
             timesteps = torch.tensor([timesteps], dtype=torch.long, device=sample.device)

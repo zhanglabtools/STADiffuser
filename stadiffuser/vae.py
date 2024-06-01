@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import contextlib
 from torch_geometric.nn.conv import GATConv
-from .modules import get_blocks, SelfAttention
+from .modules import get_blocks
 from typing import Union, List
 
 EPS = 1e-7

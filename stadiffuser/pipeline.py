@@ -3,7 +3,6 @@ Pipeline for STADiffuser model
 """
 import os
 from typing import Optional
-
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -14,6 +13,7 @@ from diffusers import SchedulerMixin, DDPMScheduler
 from torch_geometric.data import Data
 from torch_geometric.loader import NeighborLoader
 from tqdm.auto import tqdm
+from stadiffuser.dataset import get_slice_loader, TripletSampler
 
 
 def remove_edge(G, is_masked):
@@ -94,9 +94,38 @@ def prepare_dataset(adata: AnnData,
 
 
 
-def get_recon(adata, autoencoder, device="cuda:0", use_net="spatial_net", apply_normalize=True, use_rep="latent",
+def get_recon(adata, autoencoder, use_net="spatial_net", apply_normalize=True, use_rep="latent",
               use_spatial="spatial", batch_mode=False, batch_size=256, num_neighbors=[5, 3],
-              inplace=True, show_progress=True):
+              inplace=True, device="cuda:0", show_progress=True):
+    """
+    Get the reconstructed expression matrix and latent representation with the trained autoencoder.
+    Parameters
+    ----------
+    adata: AnnData
+        The AnnData object.
+    autoencoder: torch.nn.Module
+        The trained autoencoder model.
+    use_net: str
+        The key of the network in adata.uns.
+    apply_normalize: bool
+        Whether to normalize the data. If True, normalize the data. For count data, it is recommended to normalize the data.
+    use_rep: str
+        The key of the representation in adata.obsm.
+    use_spatial: str
+        The key of the spatial coordinates in adata.obsm.
+    batch_mode: bool
+        Whether to use batch mode. If True, use batch mode. For large dataset, it is recommended to use batch mode.
+    batch_size: int
+        The batch size in batch mode to compute the latent representation.
+    num_neighbors: list
+        The number of neighbors to compute the latent representation, list of integers.
+    inplace: bool
+        Whether to change the adata object in place. If True, change the adata object in place.
+    device: str
+        The device to compute the latent representation. default is "cuda:0".
+    show_progress: bool
+        Whether to show the progress bar.
+    """
     adata_recon = adata.copy()
     if apply_normalize:
         sc.pp.normalize_total(adata_recon, target_sum=1e4)
@@ -145,6 +174,37 @@ def train_autoencoder(train_loader, model,
                       save_dir=None, model_name="autoencoder",
                       device="cpu",
                       check_points=None):
+    """
+    Train the autoencoder model.
+    Parameters
+    ----------
+    train_loader: torch_geometric.loader or torch_geometric.data.DataLoader
+        The data loader for training.
+    model: torch.nn.Module
+        The autoencoder model.
+    n_epochs: int
+        The number of epochs to train.
+    gradient_clip: float
+        The gradient clip.
+    lr: float
+        The learning rate.
+    weight_decay: float
+        The weight decay.
+    save_dir: str
+        The directory to save the model. If None, do not save the model.
+    model_name: str
+        The name of the model.
+    device: str
+        The device to train the model.
+     check_points: list
+         The epochs to save the model--list of integers.
+    Returns
+    -------
+    model: torch.nn.Module
+        The trained model.
+    loss_list: list
+        The list of loss during training.
+    """
     # check if save_dir is not None and exists
     if save_dir is not None:
         if not os.path.exists(save_dir):
@@ -175,27 +235,138 @@ def train_autoencoder(train_loader, model,
     return model, loss_list
 
 
-def get_latent_embedding(adata, autoencoder, data,
-                         add_rep="latent",
-                         add_recon=None,
-                         return_recon=False,
-                         device="cpu"):
-    # get device of the model
-    # get latent representation
-    autoencoder.eval()
-    with torch.no_grad():
-        data = data.to(device)
-        latent, recon = autoencoder(data.x, data.edge_index)
-        latent = latent.cpu().numpy()
-        recon = recon.cpu().numpy()
-    # add latent representation to adata
-    adata.obsm[add_rep] = latent
-    if return_recon:
-        if add_recon is not None:
-            adata.obsm[add_recon] = recon
-        return adata, recon
-    else:
-        return adata
+def pretrain_autoencoder_multi(train_loaders, model,
+                               pretrain_epochs=100, lr=1e-4, weight_decay=1e-6,
+                               save_dir=None, model_name="autoencoder_pre", check_points=None,
+                               device="cpu"):
+    """
+    Prerain the autoencoder model on each slice.
+    """
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=pretrain_epochs)
+    loss_list = []
+    pbar = tqdm(range(pretrain_epochs))
+    model = model.to(device)
+    model.train()
+    for epoch in pbar:
+        for i, loader in enumerate(train_loaders):
+            for batch_id, batch in enumerate(loader):
+                batch = batch.to(device)
+                optimizer.zero_grad()
+                z, out = model(batch.x, batch.edge_index)
+                loss = F.mse_loss(out, batch.x)
+                loss.backward()
+                optimizer.step()
+                pbar.set_description("Pretrain|Epoch: {}, Batch: {}-{}, Loss: {:.4f}".format(epoch, i + 1, batch_id, loss.item()))
+                scheduler.step()
+                loss_list.append(loss.item())
+        scheduler.step()
+        pbar.update(1)
+        if check_points is not None and epoch in check_points:
+            torch.save(model, os.path.join(save_dir, "{}_{}.pth".format(model_name, epoch)))
+    if save_dir is not None:
+        torch.save(model, os.path.join(save_dir, "{}.pth".format(model_name)))
+    return model, loss_list
+
+
+def train_autoencoder_multi(adata, model, use_batch=None, batch_list=None,
+                            n_epochs=400, lr=1e-4, weight_decay=1e-6, margin=1.0, update_interval=50, mnn_neighbors=15,
+                            save_dir=None, model_name="autoencoder_tri", device="cpu", check_points=None):
+    """
+    Train the autoencoder model with triplet loss using multiple slices.
+
+    Parameters
+    ----------
+    adata: AnnData
+        The AnnData object.
+
+    model: torch.nn.Module
+        The autoencoder model.
+
+    use_batch: str
+        The key of the batch in adata.obs.
+
+    batch_list: list
+        The list of batch names.
+
+    n_epochs: int
+        The number of epochs to train.
+
+    lr: float
+        The learning rate.
+
+    weight_decay: float
+        The weight decay.
+
+    margin: float
+        The margin of the triplet loss. Default is 1.0.
+
+
+    """
+    # construct the train loaders
+    if batch_list is None:
+        batch_list = adata.obs[use_batch].unique()
+    train_loaders = []
+    index_mappings = []
+    iter_combs = [(i, i + 1) for i in range(len(batch_list) - 1)]
+    data = prepare_dataset(adata, use_net="spatial_net", use_spatial="spatial")
+    for batch_name in batch_list:
+        num_spots = int((adata.obs[use_batch] == batch_name).values.sum())
+        loader = get_slice_loader(adata, data, batch_name, use_batch=use_batch, batch_size=num_spots)
+        train_loaders.append(loader)
+        batch = next(iter(loader))
+        index_mappings.append({val.item(): idx for idx, val in enumerate(batch.n_id)})
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=n_epochs * len(train_loaders))
+    triplet_loss = torch.nn.TripletMarginLoss(margin=margin)
+    model = model.to(device)
+    model.train()
+    loss_list = []
+    pbar = tqdm(range(n_epochs))
+    for epoch in range(1, n_epochs + 1):
+        if (epoch - 1) % update_interval == 0:
+            pbar.set_description(f"Aling|update MNN, Epoch: {epoch}")
+            model.eval()
+            adata_temp = get_recon(adata, model, device=device, apply_normalize=False,
+                                   show_progress=False, batch_mode=True)
+            tri_samplers = []
+            for (target_id, ref_id) in iter_combs:
+                tri_samplers.append(TripletSampler(adata_temp, target=batch_list[target_id],
+                                                   use_rep="latent",
+                                                   reference=batch_list[ref_id],
+                                                   use_batch=use_batch,
+                                                   num_neighbors=mnn_neighbors))
+            model.train()
+        for ind, (target_id, ref_id) in enumerate(iter_combs):
+            optimizer.zero_grad()
+            target_batch = next(iter(train_loaders[target_id])).to(device)
+            reference_batch = next(iter(train_loaders[ref_id])).to(device)
+            z_target, out_target = model(target_batch.x, target_batch.edge_index)
+            z_reference, out_reference = model(reference_batch.x, reference_batch.edge_index)
+            anchor_indices, positive_indices, negative_indices = tri_samplers[ind].query(
+                target_batch.n_id.detach().cpu().numpy())
+            anchor_indices = [index_mappings[target_id][i] for i in anchor_indices]
+            positive_indices = [index_mappings[ref_id][i] for i in positive_indices]
+            negative_indices = [index_mappings[target_id][i] for i in negative_indices]
+            loss_rmse = F.mse_loss(out_target, target_batch.x) * .5 + F.mse_loss(out_reference, reference_batch.x) * .5
+            z_a = z_target[anchor_indices]
+            z_p = z_reference[positive_indices]
+            z_n = z_target[negative_indices]
+            loss_tri = triplet_loss(z_a, z_p, z_n)
+            loss = loss_tri + loss_rmse
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 5)
+            optimizer.step()
+            pbar.set_description(f"Align|Epoch: {epoch}, Loss: {loss.item():.4f}")
+        scheduler.step()
+        pbar.update(1)
+        loss_list.append(loss.item())
+        if check_points is not None and epoch in check_points:
+            torch.save(model, os.path.join(save_dir, "{}_{}.pth".format(model_name, epoch)))
+    if save_dir is not None:
+        torch.save(model, os.path.join(save_dir, "{}.pth".format(model_name)))
+    return model, loss_list
+
 
 
 def train_denoiser(train_loader,
@@ -217,6 +388,7 @@ def train_denoiser(train_loader,
                    ):
     r"""
     Train the denoising model with the noise scheduler.
+
     Parameters
     ----------
     train_loader: torch_geometric.loader or torch_geometric.data.DataLoader
@@ -237,6 +409,13 @@ def train_denoiser(train_loader,
         The gradient clip.
     num_class_embeds: int
         The number of class embeddings if None the model is unconditional.
+
+    Returns
+    -------
+    model: torch.nn.Module
+        The trained model.
+    loss_list: list
+        The list of loss during training.
     """
     pbar = tqdm(range(n_epochs))
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)

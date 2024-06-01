@@ -2,5 +2,6 @@ Tutorials
 =========
 
 
-Tutorial 1: Introduction to the command line
+Tutorial 1: Single slice simulation
 --------------------------------------------
+

@@ -19,6 +19,32 @@ Arguments:
     --autoencoder-max-epochs: int, the maximum number of epochs for training the autoencoder model. Default is 500.
     --denoiser-max-epochs: int, the maximum number of epochs for training the diffusion model. Default is 1000.
     --device: str, "cuda" or "cpu", specify the device to run the model.
+    --autoencoder-path: str, the path to the pre-trained autoencoder model.
+    --autoencoder-check-points: str, the check points of the autoencoder model to be used for training the diffusion model.
+    --denoiser-check-points: str, the check points of the diffusion model to be used for training the diffusion model.
+    --autoencoder-name: str, the name of the autoencoder model.
+    --autoencoder-batch-size: int, the batch size for training the autoencoder model.
+    --autoencoder-batch-mode: bool, whether to use the batch mode for training the autoencoder model.
+    --multi-slice: bool, whether to train the autoencoder model with multiple slices.
+    --use-batch: str, the column name of the batch in the metadata to be used for training the autoencoder model.
+    --pretrain-epochs: int, the number of epochs for pretraining the autoencoder model with multiple slices.
+    --exclude-batches: str, the list of batches to be excluded for training the autoencoder model.
+    --align-lr: float, the learning rate for aligning the autoencoder model with triplet loss.
+    --update-interval: int, the update interval for aligning the autoencoder model with triplet loss.
+    --margin: float, the margin for aligning the autoencoder model with triplet loss.
+    --new-spatial-division: float, the new spatial is divided by this number.
+    --new-spatial-z-division: float, the new spatial z is divided by this number.
+    --remove-na-label: bool, whether to remove the NA labels in the metadata.
+    --denoiser-batch-size: int, the batch size for training the diffusion model.
+
+Example:
+    python scripts/main.py --input_file data/processed.h5ad --output_dir output --input_dim 3000 --gat_dim 512 32
+    --block_out_dims 32 32 --label cell_type --mask mask --autoencoder-max-epochs 500 --denoiser-max-epochs 1000
+    --device cuda:0 --autoencoder-path autoencoder.pth --autoencoder-check-points 100 200 300
+    --denoiser-check-points 100 200 300 --autoencoder-name autoencoder_attn2 --autoencoder-batch-size 64
+    --autoencoder-batch-mode --multi-slice --use-batch slice_id --pretrain-epochs 200 --exclude-batches slice1
+    --align-lr 1e-4 --update-interval 50 --margin 1 --new-spatial-division 125 --new-spatial-z-division 1
+    --remove-na-label --denoiser-in-channels 17 --denoiser-batch-size 64
 """
 
 import os
@@ -35,6 +61,7 @@ from torch_geometric.loader import NeighborLoader
 import scanpy as sc
 from diffusers import DDPMScheduler
 from stadiffuser.utils import get_mask, mask_region
+from stadiffuser.dataset import get_slice_loader
 import warnings
 import logging
 warnings.filterwarnings("ignore")
@@ -99,11 +126,21 @@ parser.add_argument("--label", type=str, default=None)
 parser.add_argument("--mask", type=str, default=None)
 parser.add_argument("--autoencoder-name", type=str, default="autoencoder_attn2")
 parser.add_argument("--autoencoder-max-epochs", type=int, default=500)
-parser.add_argument("--autoencoder-batch-size", type=int, default=64)
+parser.add_argument("--autoencoder-batch-size", type=int, default=64,
+                    help="The batch size for training the autoencoder")
 parser.add_argument("--autoencoder-batch-mode", action="store_true", default=False)
 parser.add_argument("--denoiser-max-epochs", type=int, default=1000)
 parser.add_argument("--autoencoder-path", type=str, default=None)
 parser.add_argument("--autoencoder-check-points", type=str, default=None)
+#---------- parse arguments for multiple slices autoencoder training
+parser.add_argument("--multi-slice", action="store_true", default=False)
+parser.add_argument("--use-batch", type=str, default=None)
+parser.add_argument("--pretrain-epochs", type=int, default=200)
+parser.add_argument("--exclude-batches", type=str, default=None)
+parser.add_argument("--align-lr", type=float, default=1e-4)
+parser.add_argument("--update-interval", type=int, default=50)
+parser.add_argument("--margin", type=float, default=1)
+#----------- parse arguments for denoiser model
 parser.add_argument("--new-spatial-division", type=float, default=125,
                     help="The new spatial is divided by this number.")
 parser.add_argument("--new-spatial-z-division", type=float, default=1)
@@ -145,9 +182,24 @@ if __name__ == "__main__":
 
     if args.denoiser_check_points is not None:
         denoiser_ckpt = [int(x) for x in args.denoiser_check_points.split(",")]
-
+    if args.multi_slice:
+        logger.info("Train the autoencoder model with multiple slices...")
+        use_batch = args.use_batch
+        batch_list = adata.obs[use_batch].unique()
+        if args.exclude_batches is not None:
+            exclude_batches = args.exclude_batches.split(",")
+            # remove extra space in the exclude_batches
+            exclude_batches = [x.strip() for x in exclude_batches]
+            batch_list = [x for x in batch_list if x not in exclude_batches]
+            adata = adata[adata.obs[use_batch].isin(batch_list)]
+            spatial_net = adata.uns["spatial_net"].copy()
+            obs_names = adata.obs_names
+            spatial_net = spatial_net[spatial_net["Cell1"].isin(obs_names) & spatial_net["Cell2"].isin(obs_names)]
+            adata.uns["spatial_net"] = spatial_net
+        logger.info("Use batches: {}".format(batch_list))
+        logger.info("The dataset contains {} slices, {} spots and {} genes".format(len(batch_list),
+                                                                                    adata.shape[0], adata.shape[1]))
     data = pipeline.prepare_dataset(adata, use_rep=None)
-    train_loader = NeighborLoader(data, num_neighbors=[5, 3], batch_size=args.autoencoder_batch_size)
     if args.autoencoder_path is not None:
         logger.info(f"Load the autoencoder model from {args.autoencoder_path}")
         autoencoder = torch.load(args.autoencoder_path).to(device)
@@ -162,11 +214,35 @@ if __name__ == "__main__":
         else:
             autoencoder_ckpt = None
         logger.info("Train the autoencoder model ...")
-        autoencoder, autoencoder_loss = pipeline.train_autoencoder(train_loader, autoencoder,
-                                                                   n_epochs=args.autoencoder_max_epochs,
-                                                                   save_dir=output_dir, device=device,
-                                                                   model_name=args.autoencoder_name,
-                                                                   check_points=autoencoder_ckpt)
+        if not args.multi_slice:
+            train_loader = NeighborLoader(data, num_neighbors=[5, 3], batch_size=args.autoencoder_batch_size)
+            autoencoder, autoencoder_loss = pipeline.train_autoencoder(train_loader, autoencoder,
+                                                                       n_epochs=args.autoencoder_max_epochs,
+                                                                       save_dir=output_dir, device=device,
+                                                                       model_name=args.autoencoder_name,
+                                                                       check_points=autoencoder_ckpt)
+        else:
+            # pretrain the autoencoder model with multiple slices
+            train_loaders = [get_slice_loader(adata, data, batch, use_batch=use_batch,
+                                              batch_size=args.autoencoder_batch_size) for batch in batch_list]
+            logger.info("Pretrain the autoencoder model with multiple slices...")
+            autoencoder, autoencoder_loss = pipeline.pretrain_autoencoder_multi(train_loaders,
+                                                                                autoencoder,
+                                                                                pretrain_epochs=args.pretrain_epochs,
+                                                                                save_dir=output_dir,
+                                                                                check_points=autoencoder_ckpt,
+                                                                                device=device)
+            # align the autoencoder model
+            logger.info("Align the autoencoder model with triplet loss...")
+            tri_epochs = args.autoencoder_max_epochs - args.pretrain_epochs
+            autoencoder, autoencoder_loss = pipeline.train_autoencoder_multi(adata, autoencoder, use_batch=use_batch,
+                                                                             batch_list=batch_list,
+                                                                             n_epochs=tri_epochs,
+                                                                             margin=args.margin,
+                                                                             lr=args.align_lr,
+                                                                             update_interval=args.update_interval,
+                                                                             check_points=autoencoder_ckpt,
+                                                                             save_dir=output_dir, device=device)
     if args.run_autoencoder_only:
         logger.info("Finish running the STADiffuser pipeline")
         sys.exit(0)
@@ -200,6 +276,8 @@ if __name__ == "__main__":
     if spatial_3d_concat:
         in_channels += 1
         logger.info("Concatenate the 3D spatial encoding to the input channels")
+    else:
+        logger.info("Add the 3D spatial encoding to the input spaital positional channels")
     if args.label is None:
         logger.info("Train diffusion model...")
         data_latent = pipeline.prepare_dataset(adata, use_rep="normalized_latent", use_spatial="spatial_new",

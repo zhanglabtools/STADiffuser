@@ -6,11 +6,39 @@ import scanpy as sc
 import torch
 from torch_geometric.data import Data
 from torch_geometric.loader import NeighborLoader
-# import cKDTree
 from scipy.spatial import cKDTree
 
 
 def get_slice_loader(adata, data, batch_name, use_batch="slice_ID", batch_size=32, **kwargs):
+    """
+    Get the NeighborLoader for the slice batch.
+
+    Parameters
+    ----------
+    adata: `anndata.AnnData`
+        The AnnData object containing the original data of multiple batches.
+
+    data: `torch_geometric.data.Data`
+        The pytorch_geometric.data.Data object, containing the node features `data.x` and the edges `data.edge_index`.
+        Constructed by the `prepare_data` function in the `stadiffuser.pipeline` module.
+
+    batch_name: str
+        The name of the slice batch in the `use_batch` column of the `adata.obs`.
+
+    use_batch: str
+        The column name in the `adata.obs` to indicate the batch information.
+
+    batch_size: int
+        The batch size for the NeighborLoader.
+
+    **kwargs:
+        The additional arguments for the NeighborLoader.
+
+    Returns
+    -------
+    train_loader: `torch_geometric.loader.NeighborLoader`
+        The NeighborLoader for the slice batch.
+    """
     input_nodes = np.where(adata.obs[use_batch] == batch_name)[0]
     train_loader = NeighborLoader(data, num_neighbors=[5, 3], batch_size=batch_size,
                                   input_nodes=input_nodes, **kwargs)
@@ -19,22 +47,44 @@ def get_slice_loader(adata, data, batch_name, use_batch="slice_ID", batch_size=3
 
 class MaskNode:
     r"""
-    Mask the node features in the data and remove the edges connected to the masked nodes. Record the masked nodes
-    and the removed edges.
-    Parameters
-    ----------
-    data:
-        The pytorch_geometric.data.Data object, containing the node features `data.x` and the edges `data.edge_index`.
+       A class to mask node features in a graph and remove edges connected to masked nodes.
 
-    mask:
-        The mask of the nodes to be masked. 1 for masked and 0 for unmasked.
+       This class provides a way to mask specific nodes in a graph and remove the edges that are connected
+       to these nodes. It keeps track of the masked nodes and the edges that have been removed, allowing
+       for the creation of a modified graph data object with the masked nodes and remaining edges.
+
+       Parameters
+       ----------
+       data : torch_geometric.data.Data
+           The input data containing the node features `data.x` and the edges `data.edge_index`.
+       mask : numpy.ndarray
+           A boolean array indicating which nodes to mask. True for masked nodes and False for unmasked nodes.
+
+       Attributes
+       ----------
+       mask : numpy.ndarray
+           The boolean mask indicating which nodes are masked.
+       masked_nodes : numpy.ndarray
+           The indices of the masked nodes.
+       remained_nodes : numpy.ndarray
+           The indices of the nodes that remain after masking.
+       node_mapping : dict
+           A dictionary mapping the indices of the remained nodes to a new consecutive index.
     """
-
     def __init__(self,
                  data: Data,
                  mask: np.ndarray,
-                 lazy: bool = True
                  ):
+        r"""
+               Initialize the MaskNode object by setting up the mask and computing the masked and remained nodes.
+
+               Parameters
+               ----------
+               data : torch_geometric.data.Data
+                   The input data containing the node features `data.x` and the edges `data.edge_index`.
+               mask : numpy.ndarray
+                   A boolean array indicating which nodes to mask. True for masked nodes and False for unmasked nodes.
+        """
         assert data.x.shape[0] == mask.shape[0], "The number of nodes in data and mask must be the same."
         self.mask = mask
         self.masked_nodes = np.where(mask == 1)[0]
@@ -44,12 +94,20 @@ class MaskNode:
 
     def get_data(self, data):
         r"""
-        Mask the node features in the data and remove the edges connected to the masked nodes. Record the masked nodes
-        and the removed edges.
+        Create a new data object with masked node features and removed edges.
+
+        This method applies the mask to the node features and removes edges connected to masked nodes.
+        It returns a new `Data` object with the modified node features and edge indices.
+
         Parameters
         ----------
-        data:
-            The pytorch_geometric.data.Data object, containing the node features `data.x` and the edges `data.edge_index`.
+        data : torch_geometric.data.Data
+            The input data containing the node features `data.x` and the edges `data.edge_index`.
+
+        Returns
+        -------
+        torch_geometric.data.Data
+            The modified data with masked node features and removed edges.
         """
         print("Mask {} nodes and there are {} spots remaining".format(len(self.masked_nodes), len(self.remained_nodes)))
         x = data.x[~self.mask.astype(bool), :]
@@ -81,42 +139,65 @@ def _tuples_to_dict(mutual_pairs):
 
 class TripletSampler:
     """
-    Construct the triplet data for training.
-    Parameters
-    ----------
-    adata:
-        The AnnData object containing the original data of multiple batches.
-    data:
-        The pytorch_geometric.data.Data object, containing the node features `data.x` and the edges `data.edge_index`.
-    target:
-        The target batch id.
-    reference:
-        The reference batch id.
-    use_batch:
-        The batch id to be used for training.
-    use_rep:
-        The representation to be used for searching the nearest neighbors.
-    num_neighbors:
-        The number of nearest neighbors to be used for triplet construction.
-    """
+       Construct triplet data for training from batch-disjoint AnnData and PyG Data objects.
+
+       This class creates triplets consisting of an anchor node, a positive node (nearest neighbor
+       from a specified reference batch), and a negative node (randomly chosen from the target batch).
+       It uses a specified representation from the AnnData object to find nearest neighbors and construct
+       the triplets.
+
+       Parameters
+       ----------
+       adata : anndata.AnnData
+           The AnnData object containing the original data of multiple batches.
+       target : str, optional
+           The target batch id for anchor and negative nodes. Defaults to None.
+       reference : str, optional
+           The reference batch id for positive nodes. Defaults to None.
+       use_batch : str, optional
+           The batch id to be used for training. Defaults to None.
+       use_rep : str, optional
+           The key for the representation in `adata.obsm` to be used for nearest neighbor search.
+           Defaults to None, in which case `adata.X` is used.
+       num_neighbors : int, optional
+           The number of nearest neighbors to be used for triplet construction. Defaults to 30.
+       random_seed : int, optional
+           The random seed for numpy's random number generator. Defaults to 0.
+
+       Attributes
+       ----------
+       target_indices : numpy.ndarray
+           The indices of nodes in the target batch.
+       reference_indices : numpy.ndarray
+           The indices of nodes in the reference batch.
+       num_neighbors : int
+           The number of nearest neighbors for triplet construction.
+       rng : numpy.random.RandomState
+           The random number generator for sampling negative nodes.
+       mutual_dict : dict
+           A dictionary mapping anchor node indices to lists of positive node indices.
+
+       Examples
+       --------
+       >>> sampler = TripletSampler(adata, target='batch1', reference='batch2', use_batch='batch', use_rep='X_pca')
+       >>> anchor_indices, positive_indices, negative_indices = sampler.query(anchor_indices)
+       """
 
     def __init__(self,
                  adata: sc.AnnData,
-                 data,
-                 target: str,
-                 reference: str,
+                 target: str = None,
+                 reference: str = None,
                  use_batch: str = None,
                  use_rep: str = None,
                  num_neighbors: int = 30,
                  random_seed: int = 0
                  ):
         # check the input shape
-        assert data.x.shape[0] == adata.shape[0], "The number of nodes in data and adata must be the same."
         rep = adata.obsm[use_rep] if use_rep is not None else adata.X
         target_rep = rep[adata.obs[use_batch] == target, :]
         reference_rep = rep[adata.obs[use_batch] == reference, :]
         # get the indice of all the nodes
-        all_indices = np.arange(data.x.shape[0])
+        all_indices = np.arange(adata.shape[0])
         self.target_indices = all_indices[adata.obs[use_batch] == target]
         self.reference_indices = all_indices[adata.obs[use_batch] == reference]
         # construct the tree for query
@@ -137,10 +218,17 @@ class TripletSampler:
         self.mutual_dict = _tuples_to_dict(mutual_pairs)
 
     def query(self, anchor_indices):
+        r"""
+        Query the positive and negative indices for the given anchor indices.
+
+        For each anchor index, this method finds the corresponding positive indices (nearest neighbors
+        from the reference batch) and samples negative indices (randomly chosen from the target batch).
+
+        Parameters
+        ----------
+        anchor_indices : numpy
+            The indices of the anchor nodes.
         """
-        Query the positive and negative indices for the anchor indices.
-        """
-        # query the mutual nearest neighbors
         anchor_indices_list = []
         positive_indices_list = []
         negative_indices_list = []

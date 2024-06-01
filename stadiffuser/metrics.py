@@ -182,7 +182,8 @@ def compute_paired_lisi(sim_data: AnnData,
         ref_data_ = ref_data.copy()
         sim_data_.obsm[use_rep] = scipy.stats.zscore(sim_data_.obsm[use_rep], axis=0)
         ref_data_.obsm[use_rep] = scipy.stats.zscore(ref_data_.obsm[use_rep], axis=0)
-    combined_data = sim_data_.concatenate(ref_data_)
+    # combined_data = sim_data_.concatenate(ref_data_)
+    combined_data = sc.concat([sim_data, ref_data])
     combined_data.obs["batch"] = ["sim"] * sim_data.shape[0] + ["ref"] * ref_data.shape[0]
     # perform umap on the combined data
     sc.pp.neighbors(combined_data, use_rep=use_rep, n_neighbors=30)
