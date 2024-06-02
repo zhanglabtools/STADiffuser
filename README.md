@@ -1,4 +1,4 @@
-# STADiffuser: versatile deep generative model for high fidelity simulation of spatial transcriptomics
+# STADiffuser: a versatile deep generative model for high fidelity simulation of spatial transcriptomics
 
 ## Table of Contents
 - [Overview](#overview)
@@ -6,8 +6,8 @@
 - [Functionality and Applications](#functionality-and-applications)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
 - [License](#license)
+- [Troubleshooting](#troubleshooting)
 
 
 
@@ -38,15 +38,38 @@ Functionality and applicaitons includes:
 - **3D Slice Imputation**: Impute missing slices in 3D spatial transcriptomic data, providing a more continuous and complete spatial map of gene expression.
 
 ## Installation
+### Install from source code
 
-
+To install STADiffuser from source code, clone the repository and install the dependencies using the following commands:
+```bash
+git clone https://github.com/messcode/STADiffuser.git
+```
+It‘s recommended to create a new virtual environment before installing the dependencies:
+```bash
+cond create -n STADiffuser python=3.9
+```
+Activate the virtual environment:
+```bash
+conda activate STADiffuser
+```
+Now you can install the code from the source directory:
+```
+cd STADiffuser
+pip install -e .
+```
+If you encounter any issues during installation, please refer to the [Troubleshooting](#troubleshooting) section for assistance.
 ## Usage
 
 
-## Contributing
-
-
 ## License
+The project is licensed under the MIT License. See the [LICENSE](./LICENSE.txt)
 
+## Troubleshooting and Support
+If you fail to install, you may need to install the following dependencies manually. 
+- [SCANPY](https://scanpy.readthedocs.io/en/stable/installation.html): recommended version 1.9.3
+- [PyTorch](https://pytorch.org/get-started/locally/): recommended version 1.13.1
+- [PyG](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html) (PyTorch Geometric): recommended version 2.3.1
 
+Please contact us at <ins style="color: blue;"><a href="mailto:example@example.com">zhangchihao11@outlook.com</a></ins>
+ if you encounter any issues or need further assistance.
 

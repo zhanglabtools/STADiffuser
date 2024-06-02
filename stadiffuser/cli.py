@@ -50,18 +50,16 @@ Example:
 import os
 import sys
 import numpy as np
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import torch
-import pandas as pd
 import argparse
-from stadiffuser import utils
-from stadiffuser import SpaUNet1DModel, SpaAE, cal_spatial_net2D, pipeline
+from vae import SpaAE
+from .models import SpaUNet1DModel
+import pipeline
 from torch_geometric.loader import NeighborLoader
 import scanpy as sc
 from diffusers import DDPMScheduler
-from stadiffuser.utils import get_mask, mask_region
-from stadiffuser.dataset import get_slice_loader
+from utils import mask_region
+from dataset import get_slice_loader
 import warnings
 import logging
 warnings.filterwarnings("ignore")
@@ -106,6 +104,7 @@ def _check_adata_validity(adata, args):
     if args.label is not None:
         assert "label_" not in adata.obs, "label_ key is already in the .obs of the AnnData object. Please rename it."
     # check that
+    # check output_dir is valid: must be a string
     assert "spatial" in adata.obsm, "spatial key is not in the .obsm of the AnnData object"
     assert "spatial_net" in adata.uns, "spatial_net key is not in the .obsm of the AnnData object"
     # assert “label_" is not in the .obs of the AnnData object
@@ -152,13 +151,16 @@ parser.add_argument("--spatial-3d-concat", action="store_true", default=False)
 parser.add_argument("--denoiser-check-points", type=str, default=None)
 parser.add_argument("--run-autoencoder-only", action="store_true", default=False)
 
-if __name__ == "__main__":
+def main():
     # set up logger and format. Time should be YYYY-MM-DD HH:MM:SS
     logging.basicConfig(level=logging.DEBUG, format="%(levelname)s (%(asctime)s) >> %(message)s",
                         datefmt="%Y-%m-%d %H:%M:%S")
     logger = logging.getLogger("STADiffuser")
     logger.info("Start running the STADiffuser pipeline")
     args = parser.parse_args()
+    # ars.output_dir must be specificed
+    if args.output_dir is None:
+        raise ValueError("Output directory must be specified")
     if not os.path.exists(args.output_dir):
         logger.debug(f"Create output directory {args.output_dir}")
         os.makedirs(args.output_dir)
@@ -324,3 +326,6 @@ if __name__ == "__main__":
                                                          device=device, save_dir=output_dir, check_points=denoiser_ckpt)
     logger.info("Finish running the STADiffuser pipeline")
 
+
+if __name__ == "__main__":
+    main()

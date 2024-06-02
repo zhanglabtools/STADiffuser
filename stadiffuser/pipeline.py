@@ -13,7 +13,7 @@ from diffusers import SchedulerMixin, DDPMScheduler
 from torch_geometric.data import Data
 from torch_geometric.loader import NeighborLoader
 from tqdm.auto import tqdm
-from stadiffuser.dataset import get_slice_loader, TripletSampler
+from .dataset import get_slice_loader, TripletSampler
 
 
 def remove_edge(G, is_masked):
@@ -44,7 +44,7 @@ def prepare_dataset(adata: AnnData,
                     use_label=None,
                     device='cpu'):
     """
-    Transfer adata to pytorch_geometric dataset
+    Transfer adata to pytorch_geometric dataset_hub
     Parameters
     ----------
     adata:
@@ -114,7 +114,7 @@ def get_recon(adata, autoencoder, use_net="spatial_net", apply_normalize=True, u
     use_spatial: str
         The key of the spatial coordinates in adata.obsm.
     batch_mode: bool
-        Whether to use batch mode. If True, use batch mode. For large dataset, it is recommended to use batch mode.
+        Whether to use batch mode. If True, use batch mode. For large dataset_hub, it is recommended to use batch mode.
     batch_size: int
         The batch size in batch mode to compute the latent representation.
     num_neighbors: list

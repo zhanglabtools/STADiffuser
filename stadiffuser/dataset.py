@@ -1,5 +1,5 @@
 """
-This file contains the functionals and classes for dataset construction and processing.
+This file contains the functionals and classes for dataset_hub construction and processing.
 """
 import numpy as np
 import scanpy as sc

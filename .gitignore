@@ -13,7 +13,7 @@ man
 Project journal.md
 command_task.txt
 stadiffuser-comparison-R
-dataset
+dataset_hub
 scripts
 test
 envir*
@@ -133,7 +133,7 @@ celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
-
+.pypirc
 # Environments
 .env
 .venv
