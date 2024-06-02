@@ -57,6 +57,13 @@ Now you can install the code from the source directory:
 cd STADiffuser
 pip install -e .
 ```
+
+### Install from PyPI
+To install STADiffuser from PyPI, use the following command:
+```bash
+pip install stadiffuser
+```
+
 If you encounter any issues during installation, please refer to the [Troubleshooting](#troubleshooting) section for assistance.
 ## Usage
 
