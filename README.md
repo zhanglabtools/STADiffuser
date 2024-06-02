@@ -7,7 +7,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [License](#license)
-- [Troubleshooting](#troubleshooting)
+- [Troubleshooting and Support](#troubleshooting-and-support)
 
 
 

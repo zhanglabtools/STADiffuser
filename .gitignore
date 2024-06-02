@@ -10,7 +10,7 @@ notebooks
 slides
 output
 man
-Project journal.md
+Project-journal.md
 command_task.txt
 stadiffuser-comparison-R
 dataset_hub
@@ -169,3 +169,4 @@ cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
 .Rproj.user
+*.bat
