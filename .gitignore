@@ -172,3 +172,4 @@ cython_debug/
 *.bat
 # include  .h5ad files in all subdirectories, recursively
 **/*.h5ad
+**/*.pth
