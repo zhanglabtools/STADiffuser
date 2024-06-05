@@ -170,3 +170,5 @@ cython_debug/
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
 .Rproj.user
 *.bat
+# include  .h5ad files in all subdirectories, recursively
+**/*.h5ad

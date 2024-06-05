@@ -1,65 +1,96 @@
 # cli.py
 
 """
-Script to run the main program of STADiffuser.
+Command-line interface to run the main program of STADiffuser.
 
-Usage: python scripts/cli.py --args
+Usage: stadiffuser-cli [OPTIONS]
 
-Arguments:
-    --input_file: str, path to the processed h5ad file. The AnnData object should contain the gene expression matrix,
-    `spatial_net` and `spatial` in the `.obsm` and the metadata in the `.obs`.
-    --output_dir: str, path to the output directory
-    --input_dim: int, the input dimension of the autoencoder model.
-    --gat_dim: list, the hidden dimensions of the GAT layers in the autoencoder model.
-    --block_out_dims: list, the output dimensions of the blocks in the autoencoder model.
-    --label: str, the column name of the label in the metadata to be used for diffusion model training. The key should
-    be in the `.obs` of the AnnData object.
-    --mask: str, the mask file to specify the region of interest. The key should be in the `.obs` of the AnnData object.
-    If not specified, the whole slide will be used.
-    --autoencoder-max-epochs: int, the maximum number of epochs for training the autoencoder model. Default is 500.
-    --denoiser-max-epochs: int, the maximum number of epochs for training the diffusion model. Default is 1000.
-    --device: str, "cuda" or "cpu", specify the device to run the model.
-    --autoencoder-path: str, the path to the pre-trained autoencoder model.
-    --autoencoder-check-points: str, the check points of the autoencoder model to be used for training the diffusion model.
-    --denoiser-check-points: str, the check points of the diffusion model to be used for training the diffusion model.
-    --autoencoder-name: str, the name of the autoencoder model.
-    --autoencoder-batch-size: int, the batch size for training the autoencoder model.
-    --autoencoder-batch-mode: bool, whether to use the batch mode for training the autoencoder model.
-    --multi-slice: bool, whether to train the autoencoder model with multiple slices.
-    --use-batch: str, the column name of the batch in the metadata to be used for training the autoencoder model.
-    --pretrain-epochs: int, the number of epochs for pretraining the autoencoder model with multiple slices.
-    --exclude-batches: str, the list of batches to be excluded for training the autoencoder model.
-    --align-lr: float, the learning rate for aligning the autoencoder model with triplet loss.
-    --update-interval: int, the update interval for aligning the autoencoder model with triplet loss.
-    --margin: float, the margin for aligning the autoencoder model with triplet loss.
-    --new-spatial-division: float, the new spatial is divided by this number.
-    --new-spatial-z-division: float, the new spatial z is divided by this number.
-    --remove-na-label: bool, whether to remove the NA labels in the metadata.
-    --denoiser-batch-size: int, the batch size for training the diffusion model.
+Options:
+  --input_file PATH           str, path to the processed h5ad file. The AnnData object should contain the gene expression matrix,
+                              `spatial_net` and `spatial` in the `.obsm` and the metadata in the `.obs`.
 
-Example:
-    python scripts/cli.py --input_file data/processed.h5ad --output_dir output --input_dim 3000 --gat_dim 512 32
-    --block_out_dims 32 32 --label cell_type --mask mask --autoencoder-max-epochs 500 --denoiser-max-epochs 1000
-    --device cuda:0 --autoencoder-path autoencoder.pth --autoencoder-check-points 100 200 300
-    --denoiser-check-points 100 200 300 --autoencoder-name autoencoder_attn2 --autoencoder-batch-size 64
-    --autoencoder-batch-mode --multi-slice --use-batch slice_id --pretrain-epochs 200 --exclude-batches slice1
-    --align-lr 1e-4 --update-interval 50 --margin 1 --new-spatial-division 125 --new-spatial-z-division 1
-    --remove-na-label --denoiser-in-channels 17 --denoiser-batch-size 64
+  --output_dir PATH           str, path to the output directory.
+
+  --input_dim INTEGER         int, the input dimension of the autoencoder model.
+
+  --gat_dim LIST              list, the hidden dimensions of the GAT layers in the autoencoder model.
+
+  --block_out_dims LIST       list, the output dimensions of the blocks in the autoencoder model.
+
+  --label STR                 str, the column name of the label in the metadata to be used for diffusion model training. The key
+                              should be in the `.obs` of the AnnData object.
+
+  --mask STR                  str, the mask file to specify the region of interest. The key should be in the `.obs` of the AnnData
+                              object. If not specified, the whole slide will be used.
+
+  --autoencoder-max-epochs INTEGER
+                              int, the maximum number of epochs for training the autoencoder model. Default is 500.
+
+  --denoiser-max-epochs INTEGER
+                              int, the maximum number of epochs for training the diffusion model. Default is 1000.
+
+  --device STR                str, "cuda" or "cpu", specify the device to run the model.
+
+  --autoencoder-path PATH     str, the path to the pre-trained autoencoder model.
+
+  --autoencoder-check-points PATH
+                              str, the check points of the autoencoder model to be used for training the diffusion model.
+
+  --denoiser-check-points PATH
+                              str, the check points of the diffusion model to be used for training the diffusion model.
+
+  --autoencoder-name STR      str, the name of the autoencoder model.
+
+  --autoencoder-batch-size INTEGER
+                              int, the batch size for training the autoencoder model.
+
+  --autoencoder-batch-mode / --no-autoencoder-batch-mode
+                              bool, whether to use the batch mode for training the autoencoder model.
+
+  --multi-slice / --no-multi-slice
+                              bool, whether to train the autoencoder model with multiple slices.
+
+  --use-batch STR             str, the column name of the batch in the metadata to be used for training the autoencoder model.
+
+  --pretrain-epochs INTEGER   int, the number of epochs for pretraining the autoencoder model with multiple slices.
+
+  --exclude-batches STR       str, the list of batches to be excluded for training the autoencoder model.
+
+
+  --align-lr FLOAT            float, the learning rate for aligning the autoencoder model with triplet loss.
+
+
+  --update-interval INTEGER   int, the update interval for aligning the autoencoder model with triplet loss.
+
+  --margin FLOAT              float, the margin for aligning the autoencoder model with triplet loss.
+
+  --new-spatial-division FLOAT
+                              float, the new spatial is divided by this number.
+
+  --new-spatial-z-division FLOAT
+                              float, the new spatial z is divided by this number.
+
+  --remove-na-label / --no-remove-na-label
+                              bool, whether to remove the NA labels in the metadata.
+
+  --denoiser-batch-size INTEGER
+                              int, the batch size for training the diffusion model.
 """
+
 
 import os
 import sys
 import numpy as np
 import torch
 import argparse
-from vae import SpaAE
+from .vae import SpaAE
 from .models import SpaUNet1DModel
-import pipeline
+from .utils import MinMaxNormalize, quantize_coordination, mask_region
+import stadiffuser.pipeline as pipeline
 from torch_geometric.loader import NeighborLoader
 import scanpy as sc
 from diffusers import DDPMScheduler
-from utils import mask_region
-from dataset import get_slice_loader
+from .dataset import get_slice_loader
 import warnings
 import logging
 warnings.filterwarnings("ignore")
@@ -111,47 +142,48 @@ def _check_adata_validity(adata, args):
 
 
 # --- Set up the argument parser
-parser = argparse.ArgumentParser()
-parser.add_argument("--input_file", type=str, help="Path to the processed input h5ad file")
-parser.add_argument("--output_dir", type=str, help="Path to the output directory")
-parser.add_argument("--device", type=str, default="cuda:0")
-parser.add_argument("--input_dim", type=int, help="The input dimension of the autoencoder model", default=3000)
-parser.add_argument("--gat_dim", type=int, nargs="+",
-                    help="The hidden dimensions of the GAT layers in the autoencoder model", default=[512, 32])
-parser.add_argument("--block_out_dims", type=int, nargs="+",
-                    help="The output dimensions of the blocks in the autoencoder model", default=[32, 32])
-parser.add_argument("--scale-exp", action="store_true", default=False)
-parser.add_argument("--label", type=str, default=None)
-parser.add_argument("--mask", type=str, default=None)
-parser.add_argument("--autoencoder-name", type=str, default="autoencoder_attn2")
-parser.add_argument("--autoencoder-max-epochs", type=int, default=500)
-parser.add_argument("--autoencoder-batch-size", type=int, default=64,
-                    help="The batch size for training the autoencoder")
-parser.add_argument("--autoencoder-batch-mode", action="store_true", default=False)
-parser.add_argument("--denoiser-max-epochs", type=int, default=1000)
-parser.add_argument("--autoencoder-path", type=str, default=None)
-parser.add_argument("--autoencoder-check-points", type=str, default=None)
-#---------- parse arguments for multiple slices autoencoder training
-parser.add_argument("--multi-slice", action="store_true", default=False)
-parser.add_argument("--use-batch", type=str, default=None)
-parser.add_argument("--pretrain-epochs", type=int, default=200)
-parser.add_argument("--exclude-batches", type=str, default=None)
-parser.add_argument("--align-lr", type=float, default=1e-4)
-parser.add_argument("--update-interval", type=int, default=50)
-parser.add_argument("--margin", type=float, default=1)
-#----------- parse arguments for denoiser model
-parser.add_argument("--new-spatial-division", type=float, default=125,
-                    help="The new spatial is divided by this number.")
-parser.add_argument("--new-spatial-z-division", type=float, default=1)
-parser.add_argument("--remove-na-label", action="store_true", default=False)
-parser.add_argument("--denoiser-in-channels", type=int, default=17)
-parser.add_argument("--denoiser-batch-size", type=int, default=64)
-parser.add_argument("--denoiser-3d", action="store_true", default=False)
-parser.add_argument("--spatial-3d-concat", action="store_true", default=False)
-parser.add_argument("--denoiser-check-points", type=str, default=None)
-parser.add_argument("--run-autoencoder-only", action="store_true", default=False)
+
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input_file", type=str, help="Path to the processed input h5ad file")
+    parser.add_argument("--output_dir", type=str, help="Path to the output directory")
+    parser.add_argument("--device", type=str, default="cuda:0")
+    parser.add_argument("--input_dim", type=int, help="The input dimension of the autoencoder model", default=3000)
+    parser.add_argument("--gat_dim", type=int, nargs="+",
+                        help="The hidden dimensions of the GAT layers in the autoencoder model", default=[512, 32])
+    parser.add_argument("--block_out_dims", type=int, nargs="+",
+                        help="The output dimensions of the blocks in the autoencoder model", default=[32, 32])
+    parser.add_argument("--scale-exp", action="store_true", default=False)
+    parser.add_argument("--label", type=str, default=None)
+    parser.add_argument("--mask", type=str, default=None)
+    parser.add_argument("--autoencoder-name", type=str, default="autoencoder_attn2")
+    parser.add_argument("--autoencoder-max-epochs", type=int, default=500)
+    parser.add_argument("--autoencoder-batch-size", type=int, default=64,
+                        help="The batch size for training the autoencoder")
+    parser.add_argument("--autoencoder-batch-mode", action="store_true", default=False)
+    parser.add_argument("--denoiser-max-epochs", type=int, default=1000)
+    parser.add_argument("--autoencoder-path", type=str, default=None)
+    parser.add_argument("--autoencoder-check-points", type=str, default=None)
+    # ---------- parse arguments for multiple slices autoencoder training
+    parser.add_argument("--multi-slice", action="store_true", default=False)
+    parser.add_argument("--use-batch", type=str, default=None)
+    parser.add_argument("--pretrain-epochs", type=int, default=200)
+    parser.add_argument("--exclude-batches", type=str, default=None)
+    parser.add_argument("--align-lr", type=float, default=1e-4)
+    parser.add_argument("--update-interval", type=int, default=50)
+    parser.add_argument("--margin", type=float, default=1)
+    # ----------- parse arguments for denoiser model
+    parser.add_argument("--new-spatial-division", type=float, default=125,
+                        help="The new spatial is divided by this number.")
+    parser.add_argument("--new-spatial-z-division", type=float, default=1)
+    parser.add_argument("--remove-na-label", action="store_true", default=False)
+    parser.add_argument("--denoiser-in-channels", type=int, default=17)
+    parser.add_argument("--denoiser-batch-size", type=int, default=64)
+    parser.add_argument("--denoiser-3d", action="store_true", default=False)
+    parser.add_argument("--spatial-3d-concat", action="store_true", default=False)
+    parser.add_argument("--denoiser-check-points", type=str, default=None)
+    parser.add_argument("--run-autoencoder-only", action="store_true", default=False)
     # set up logger and format. Time should be YYYY-MM-DD HH:MM:SS
     logging.basicConfig(level=logging.DEBUG, format="%(levelname)s (%(asctime)s) >> %(message)s",
                         datefmt="%Y-%m-%d %H:%M:%S")
@@ -259,17 +291,17 @@ def main():
     else:
         adata = pipeline.get_recon(adata, autoencoder, device=device,
                                    apply_normalize=False, show_progress=False, batch_mode=False)
-    normalizer = utils.MinMaxNormalize(adata.obsm["latent"], dim=0)
+    normalizer = MinMaxNormalize(adata.obsm["latent"], dim=0)
     adata.obsm["normalized_latent"] = normalizer.normalize(adata.obsm["latent"])
     # convert the spatial coordination to the new spatial coordination
     spatial_new = adata.obsm["spatial"].copy()
     dvision = args.new_spatial_division
     logger.debug(f"Quantize the spatial coordination by division {dvision}")
     if not args.denoiser_3d:
-        spatial_new = utils.quantize_coordination(spatial_new, methods=[("division", dvision), ("division", dvision)])
+        spatial_new = quantize_coordination(spatial_new, methods=[("division", dvision), ("division", dvision)])
     else:
         logger.info("Run 3D denoiser model...")
-        spatial_new = utils.quantize_coordination(spatial_new, methods=[("division", dvision), ("division", dvision),
+        spatial_new = quantize_coordination(spatial_new, methods=[("division", dvision), ("division", dvision),
                                                                         ("division", args.new_spatial_z_division)])
     adata.obsm["spatial_new"] = spatial_new
     noise_scheduler = DDPMScheduler(num_train_timesteps=1000)

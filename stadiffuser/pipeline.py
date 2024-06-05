@@ -44,23 +44,31 @@ def prepare_dataset(adata: AnnData,
                     use_label=None,
                     device='cpu'):
     """
-    Transfer adata to pytorch_geometric dataset_hub
+    Transfer adata to pytorch_geometric dataset. This function is used for training the autoencoder model.
+    Side effect: add edge_list to adata.uns.
+
     Parameters
     ----------
-    adata:
-        AnnData object, adata.obsm["spatial"] must exist.
-    factor:
+    adata: AnnData
+        a.obsm["spatial"] must exist in adata.
+
+    factor: float
         The factor to divide the spatial coordinates.
-    used_mask:
+
+    used_mask: str
         The key of the mask in adata.obs.
-    use_rep:
+
+    use_rep: str
         The key of the expression matrix in adata.obsm. If None, use adata.X.
-    use_spatial:
+
+    use_spatial: str
         The key of the spatial coordinates in adata.obsm.
-    use_label:
+
+    use_label: str
         The key of the label in adata.obs.
-    device:
+    device: str
         "cpu" or "cuda"
+
     Notes: side effect: add edge_list to adata.uns
     """
     G_df = adata.uns[use_net].copy()
@@ -99,32 +107,50 @@ def get_recon(adata, autoencoder, use_net="spatial_net", apply_normalize=True, u
               inplace=True, device="cuda:0", show_progress=True):
     """
     Get the reconstructed expression matrix and latent representation with the trained autoencoder.
+
     Parameters
     ----------
+
     adata: AnnData
         The AnnData object.
+
     autoencoder: torch.nn.Module
         The trained autoencoder model.
+
     use_net: str
         The key of the network in adata.uns.
+
     apply_normalize: bool
         Whether to normalize the data. If True, normalize the data. For count data, it is recommended to normalize the data.
+
     use_rep: str
         The key of the representation in adata.obsm.
+
     use_spatial: str
         The key of the spatial coordinates in adata.obsm.
+
     batch_mode: bool
         Whether to use batch mode. If True, use batch mode. For large dataset_hub, it is recommended to use batch mode.
+
     batch_size: int
         The batch size in batch mode to compute the latent representation.
+
     num_neighbors: list
         The number of neighbors to compute the latent representation, list of integers.
+
     inplace: bool
         Whether to change the adata object in place. If True, change the adata object in place.
+
     device: str
         The device to compute the latent representation. default is "cuda:0".
+
     show_progress: bool
         Whether to show the progress bar.
+
+    Returns
+    -------
+    adata_recon: AnnData
+        The AnnData object with the reconstructed expression matrix and latent representation.
     """
     adata_recon = adata.copy()
     if apply_normalize:
@@ -180,28 +206,39 @@ def train_autoencoder(train_loader, model,
     ----------
     train_loader: torch_geometric.loader or torch_geometric.data.DataLoader
         The data loader for training.
+
     model: torch.nn.Module
         The autoencoder model.
+
     n_epochs: int
         The number of epochs to train.
+
     gradient_clip: float
         The gradient clip.
+
     lr: float
         The learning rate.
+
     weight_decay: float
         The weight decay.
+
     save_dir: str
         The directory to save the model. If None, do not save the model.
+
     model_name: str
         The name of the model.
+
     device: str
         The device to train the model.
-     check_points: list
+
+    check_points: list
          The epochs to save the model--list of integers.
+
     Returns
     -------
     model: torch.nn.Module
         The trained model.
+
     loss_list: list
         The list of loss during training.
     """

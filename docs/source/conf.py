@@ -28,6 +28,8 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_gallery.load_style",
     "sphinx_design",
+    "nbsphinx",
+    "sphinxarg.ext",
 ]
 
 autoapi_dirs = ["autoapi"]

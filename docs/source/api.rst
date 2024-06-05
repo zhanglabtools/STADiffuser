@@ -1,13 +1,8 @@
+.. _API:
+
 API Reference
 =============
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
-
-   Pipelines
-   Models
-   Dataset
 
 Pipelines
 ---------

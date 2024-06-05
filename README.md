@@ -12,7 +12,7 @@
 
 
 ## Overview
-STADiffuser is a cutting-edge deep generative model designed to simulate high-fidelity spatial transcriptomic (ST) data. This tool addresses the limitations of current spatial transcriptomics technologies, such as high costs, data sparsity, and limited resolution, by providing a versatile simulation framework that can generate accurate and detailed ST data.
+STADiffuser is a cutting-edge deep generative model designed to simulate high-fidelity spatial transcriptomic (ST) data. By providing a versatile simulation framework that can generate accurate and detailed ST data, this tool enables various downstream tasks, including: imputation, super-resolution, in silico experiments, and cell type-specific gene identification.
 
 ## Architecture
 STADiffuser's architecture is composed of a two-stage framework designed for high-fidelity simulation: 
@@ -77,6 +77,6 @@ If you fail to install, you may need to install the following dependencies manua
 - [PyTorch](https://pytorch.org/get-started/locally/): recommended version 1.13.1
 - [PyG](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html) (PyTorch Geometric): recommended version 2.3.1
 
-Please contact us at <ins style="color: blue;"><a href="mailto:example@example.com">zhangchihao11@outlook.com</a></ins>
+Please contact us at zhangchihao11@outlook.com
  if you encounter any issues or need further assistance.
 
