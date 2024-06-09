@@ -3,20 +3,23 @@ Cipyright (c) 2024, My Company
 """
 import re
 import sys
-
 from setuptools import Command, find_packages, setup
+from setuptools.command.install import install
+
 
 _deps = [
     "scanpy>=1.9.3,<1.11",
     "scikit-learn>=1.3.0,<1.4",
-    "scipy>=1.10.1,<1.11",
+    "scipy>=1.10.1",
     "pandas>=2.0.3,<2.1",
     "anndata>=0.10.7,<0.11",
-    "torch>=1.13.1,<1.14",
+    "torch>=1.13.1",
     "diffusers>=0.17.1,<0.18",
-    "torch-geometric>=2.3.1,<2.4",
-    "tqdm>=4.65.0,<4.66",
-    "rpy2>=3.5.13,<3.6",
+    "torch-geometric>=2.3.1",
+    "tqdm>=4.65.0",
+    "rpy2>=3.5.13",
+    "jupyter>=1.0.0",
+    "ipywidgets>=7.0.0,<8.0",
 ]
 
 # set rpy2 "rpy2>=3.5.13,<3.6", to be optional
@@ -79,12 +82,14 @@ install_requires = [
     deps["torch-geometric"],
     deps["diffusers"],
     deps["tqdm"],
+    deps["ipywidgets"],
+    deps["jupyter"],
 ]
 
 
 setup(
     name="stadiffuser",
-    version="0.1.0",
+    version="0.1.1",
     description="A versatile simulation framework for spatial transcriptomics data",
     author="Chihao Zhang",
     author_email="zhangchihao11@outlook.com",
@@ -96,5 +101,5 @@ setup(
         'console_scripts': [
             'stadiffuser-cli=scripts.cli:main',
         ],
-    }
+    },
 )

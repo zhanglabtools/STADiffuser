@@ -38,15 +38,28 @@ Functionality and applicaitons includes:
 - **3D Slice Imputation**: Impute missing slices in 3D spatial transcriptomic data, providing a more continuous and complete spatial map of gene expression.
 
 ## Installation
+
+Make sure you have installed a version of [PyTorch](https://pytorch.org/) (version >= 1.13.1) that is compatible with your GPU (if applicable) first.
+
+```bash
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
+Replace cu118 with the appropriate CUDA version for your system if it differs from CUDA 11.8. If you are using a CPU-only version, you can simply install PyTorch without specifying a CUDA version:
+
+``` bash
+pip3 install torch torchvision torchaudio
+```
+
 ### Install from source code
 
 To install STADiffuser from source code, clone the repository and install the dependencies using the following commands:
 ```bash
-git clone https://github.com/messcode/STADiffuser.git
+git clone git@github.com:messcode/STADiffuser.git
 ```
 It‘s recommended to create a new virtual environment before installing the dependencies:
 ```bash
-cond create -n STADiffuser python=3.9
+conda create -n STADiffuser python=3.9
 ```
 Activate the virtual environment:
 ```bash
