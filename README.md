@@ -1,3 +1,5 @@
+![Banner](logo_banner.png)
+
 # STADiffuser: a versatile deep generative model for high fidelity simulation of spatial transcriptomics
 
 ## Table of Contents
@@ -20,12 +22,12 @@ STADiffuser's architecture is composed of a two-stage framework designed for hig
 - **Latent Diffusion Model with Spatial Denoising Network**： The latent diffusion model generates realistic ST data by diffusing the learned embeddings through a spatial denoising network, which refines the spatial patterns and gene expression profiles.
 
 
-![STADiffuser](https://github.com/messcode/STADiffuser/blob/main/docs/_static/STADiffuser-backbone.png)
+![STADiffuser](./docs/_static/STADiffuser-backbone.png)
 
 ## Functionality and Applications
 STADiffuser offers a range of functionalities and applications that make it a powerful tool for simulating and analyzing spatial transcriptomic data.
 
-![STADiffuser](https://github.com/messcode/STADiffuser/blob/main/docs/_static/STADiffuser-app.png)
+![STADiffuser](./docs/_static/STADiffuser-app.png)
 
 Functionality and applicaitons includes:
 - **Multi-Sample and 3D Coordinate Modeling**: Handle multiple samples simultaneously and model data in 3D space for comprehensive and realistic simulations.
@@ -38,17 +40,30 @@ Functionality and applicaitons includes:
 - **3D Slice Imputation**: Impute missing slices in 3D spatial transcriptomic data, providing a more continuous and complete spatial map of gene expression.
 
 ## Installation
+It's recommended to create a new virtual environment before installing the dependencies:
+
+```bash
+conda create -n STADiffuser python=3.9
+```
+
+Activate the virtual environment:
+
+```bash
+conda activate STADiffuser
+```
+
+### Prerequisites
 
 Make sure you have installed a version of [PyTorch](https://pytorch.org/) (version >= 1.13.1) that is compatible with your GPU (if applicable) first.
 
 ```bash
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
 ```
 
-Replace cu118 with the appropriate CUDA version for your system if it differs from CUDA 11.8. If you are using a CPU-only version, you can simply install PyTorch without specifying a CUDA version:
+Replace cu118 with the appropriate CUDA version for your system if it differs from CUDA 11.8. If you are using a CPU-only version, you can simply install PyTorch without specifying a CUDA version. 
 
 ``` bash
-pip3 install torch torchvision torchaudio
+pip install torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-1.13.1+cu117.html
 ```
 
 ### Install from source code
@@ -57,15 +72,9 @@ To install STADiffuser from source code, clone the repository and install the de
 ```bash
 git clone git@github.com:messcode/STADiffuser.git
 ```
-It‘s recommended to create a new virtual environment before installing the dependencies:
-```bash
-conda create -n STADiffuser python=3.9
-```
-Activate the virtual environment:
-```bash
-conda activate STADiffuser
-```
+
 Now you can install the code from the source directory:
+
 ```
 cd STADiffuser
 pip install -e .
