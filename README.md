@@ -22,7 +22,7 @@ STADiffuser's architecture is composed of a two-stage framework designed for hig
 - **Latent Diffusion Model with Spatial Denoising Network**： The latent diffusion model generates realistic ST data by diffusing the learned embeddings through a spatial denoising network, which refines the spatial patterns and gene expression profiles.
 
 
-![STADiffuser](./docs/_static/STADiffuser-backbone.png)
+![STADiffuser](https://github.com/messcode/STADiffuser/blob/main/docs/_static/STADiffuser-app.PNG)
 
 ## Functionality and Applications
 STADiffuser offers a range of functionalities and applications that make it a powerful tool for simulating and analyzing spatial transcriptomic data.
