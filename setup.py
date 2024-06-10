@@ -19,7 +19,9 @@ _deps = [
     "tqdm>=4.65.0",
     "rpy2>=3.5.13",
     "jupyter>=1.0.0",
-    "ipywidgets>=7.0.0,<8.0",
+    "ipywidgets==7.6.5",
+    "widgetsnbextension==3.5.1",
+    "notebook==6.1.5"
 ]
 
 # set rpy2 "rpy2>=3.5.13,<3.6", to be optional
