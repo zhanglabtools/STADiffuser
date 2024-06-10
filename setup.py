@@ -86,6 +86,8 @@ install_requires = [
     deps["tqdm"],
     deps["ipywidgets"],
     deps["jupyter"],
+    deps["widgetsnbextension"],
+    deps["notebook"],
 ]
 
 

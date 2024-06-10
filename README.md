@@ -98,6 +98,15 @@ If you fail to install, you may need to install the following dependencies manua
 - [PyTorch](https://pytorch.org/get-started/locally/): recommended version 1.13.1
 - [PyG](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html) (PyTorch Geometric): recommended version 2.3.1
 
+### Progress Bar Issue
+
+Failure to show progress bars during training may be due to incompatible versions of the `notebook`, `ipywidgets` and `jupyter`. To resolve this issue, you can install the compatible versions of these packages using the following commands:
+
+```bash
+pip install ipywidgets==7.6.5
+pip install widgetsnbextension==3.5.1
+pip install notebook==6.1.5
+```
 Please contact us at zhangchihao11@outlook.com
  if you encounter any issues or need further assistance.
 
