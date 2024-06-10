@@ -61,6 +61,9 @@ pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --e
 
 Replace cu118 with the appropriate CUDA version for your system if it differs from CUDA 11.8. If you are using a CPU-only version, you can simply install PyTorch without specifying a CUDA version. 
 
+
+Install `torch_geometric` dependencies:
+
 ``` bash
 pip install torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-1.13.1+cu117.html
 ```
