@@ -41,7 +41,7 @@ To install STADiffuser from source code, clone the repository and install the de
 
 .. code-block:: bash
 
-    git clone https://github.com/messcode/STADiffuser.git
+    git clone git@github.com:messcode/STADiffuser.git
 
 
 Now you can install the code from the source directory:
