@@ -18,7 +18,7 @@
 STADiffuser is a cutting-edge deep generative model designed to simulate high-fidelity spatial transcriptomic (ST) data. By providing a versatile simulation framework that can generate accurate and detailed ST data, this tool enables various downstream tasks, including: imputation, super-resolution, in silico experiments, and cell type-specific gene identification.
 
 ## News
-- - **2025-07-02:** An interactive web demo for generating virtual slices from arbitrary planes is available at [https://zhanglab-amss.org/Omni-View-3D-Cerebellar](https://zhanglab-amss.org/Omni-View-3D-Cerebellar).
+-  **2025-07-02:** An interactive web demo for generating virtual slices from arbitrary planes is available at [https://zhanglab-amss.org/Omni-View-3D-Cerebellar](https://zhanglab-amss.org/Omni-View-3D-Cerebellar).
 
 ## Architecture
 STADiffuser's architecture is composed of a two-stage framework designed for high-fidelity simulation: 
