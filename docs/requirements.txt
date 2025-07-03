@@ -7,3 +7,9 @@ nbsphinx
 sphinx-argparse
 matplotlib
 numpy
+
+scanpy
+torch
+torch-geometric
+scipy
+pandas
