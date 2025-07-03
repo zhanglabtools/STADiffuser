@@ -22,7 +22,7 @@ Please refer to the :ref:`Tutorials` for a step-by-step guide on how to use STAD
 Architecture
 ------------
 
-.. image::  ../_static/STADiffuser-backbone.png
+.. image::  _static/STADiffuser-backbone.png
     :align: center
     :width: 75%
     :alt: STADiffuser framework
@@ -40,7 +40,7 @@ STADiffuser offers a range of functionalities and applications that make it a po
 See :doc:`tutorials` for more details.
 
 
-.. image::  ../_static/STADiffuser-app.png
+.. image::  _static/STADiffuser-app.png
     :align: center
     :width: 75%
     :alt: STADiffuser empowers various downstream analyses
