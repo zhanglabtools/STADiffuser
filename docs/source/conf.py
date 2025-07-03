@@ -46,7 +46,7 @@ templates_path = ['_templates']
 
 html_theme = 'furo'
 # set hthe
-html_logo = "../_static/logo.png"
+html_logo = "_static/logo.png"
 html_title = "STADiffuser documentation"
 html_theme_options = {
     "sidebar_hide_name": True,
