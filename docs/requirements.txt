@@ -16,3 +16,4 @@ torch-geometric
 scipy
 pandas
 diffusers
+anndata
