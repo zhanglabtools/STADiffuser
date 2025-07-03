@@ -7,9 +7,11 @@ nbsphinx
 sphinx-argparse
 matplotlib
 numpy
+yaml
 
 scanpy
 torch
 torch-geometric
 scipy
 pandas
+diffusers
