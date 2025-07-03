@@ -59,7 +59,7 @@ html_theme_options = {
     },
 }
 # -- Options for EPUB output
-autodoc_mock_imports = ["scanpy", "torch", "torch_geometric", "scipy", "pandas"]
+autodoc_mock_imports = ["scanpy", "torch", "torch_geometric", "scipy", "pandas", "diffusers"]
 html_static_path = ['_static']
 epub_show_urls = 'footnote'
 autosummary_generate = True
