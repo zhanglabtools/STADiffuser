@@ -1,6 +1,6 @@
 ![Banner](logo_banner.png)
 
-# STADiffuser: a versatile deep generative model for high fidelity simulation of spatial transcriptomics
+# STADiffuser: high-fidelity simulation and full-view 3D modeling of spatial transcriptomics
 
 ## Table of Contents
 - [Overview](#overview)
