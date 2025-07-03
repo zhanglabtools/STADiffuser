@@ -18,6 +18,10 @@ Please refer to the :ref:`Tutorials` for a step-by-step guide on how to use STAD
    cli
    api
 
+3D Marmoset Cerebellum Reconstruction
+-------------------------------------
+STADiffuser reconstructs a high-resolution 3D atlas of the marmoset cerebellum from sparse 2D slices, overcoming challenges posed by large-scale and anisotropic spatial data. Trained on over 1.9 million spatial spots, it enables dense, biologically meaningful virtual reconstruction and supports flexible slice generation from arbitrary viewing angles — including coronal, sagittal, and oblique planes. This empowers full-view spatial exploration beyond physical sectioning constraints.  
+👉 Interactive demo: https://zhanglab-amss.org/Omni-View-3D-Cerebellar/
 
 Architecture
 ------------
@@ -44,5 +48,6 @@ See :doc:`tutorials` for more details.
     :align: center
     :width: 75%
     :alt: STADiffuser empowers various downstream analyses
+
 
 

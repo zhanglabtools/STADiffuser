@@ -61,3 +61,5 @@ html_theme_options = {
 # -- Options for EPUB output
 html_static_path = ['_static']
 epub_show_urls = 'footnote'
+autosummary_generate = True
+
