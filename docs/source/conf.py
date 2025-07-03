@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 # print current path
 print(os.path.abspath('../..'))
 project = 'STADiffuser'
-copyright = '2024, Chihao Zhang'
+copyright = '2025, Chihao Zhang'
 author = 'Chihao Zhang'
 
 release = '0.1'
@@ -59,4 +59,5 @@ html_theme_options = {
     },
 }
 # -- Options for EPUB output
+html_static_path = ['_static']
 epub_show_urls = 'footnote'
