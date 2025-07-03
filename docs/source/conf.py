@@ -32,7 +32,7 @@ extensions = [
     "sphinxarg.ext",
 ]
 
-autoapi_dirs = ["autoapi"]
+# autoapi_dirs = ["autoapi"]
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),

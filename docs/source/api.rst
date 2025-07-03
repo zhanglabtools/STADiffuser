@@ -3,27 +3,27 @@
 API Reference
 =============
 
-
 Pipelines
 ---------
 
 .. automodule:: stadiffuser.pipeline
    :members:
-   :autosummary:
-
+   :undoc-members:
+   :show-inheritance:
 
 Models
 ------
 
 .. automodule:: stadiffuser.models
    :members:
-   :autosummary:
-
+   :undoc-members:
+   :show-inheritance:
 
 Dataset
 -------
 
 .. automodule:: stadiffuser.dataset
    :members:
-   :autosummary:
+   :undoc-members:
+   :show-inheritance:
 
