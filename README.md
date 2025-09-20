@@ -101,6 +101,7 @@ If you encounter any issues during installation, please refer to the [Troublesho
 The project is licensed under the MIT License. See the [LICENSE](./LICENSE.txt)
 
 ## Troubleshooting and Support
+Installation time may vary (5–20 minutes) depending on the network connection, due to large dependencies (e.g. PyTorch, scanpy).
 If you fail to install, you may need to install the following dependencies manually. 
 - [SCANPY](https://scanpy.readthedocs.io/en/stable/installation.html): recommended version 1.9.3
 - [PyTorch](https://pytorch.org/get-started/locally/): recommended version 1.13.1
